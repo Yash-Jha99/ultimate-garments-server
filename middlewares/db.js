@@ -1,10 +1,10 @@
 var mysql = require('mysql')
 var db = mysql.createConnection({
-    host: "localhost",
-    port: 3306,
-    user: 'root',
-    password: "1234",
-    database: "ultimate_garments",
+    host: MYSQL_HOST,
+    port: MYSQL_PORT,
+    user: MYSQL_USER,
+    password: MYSQL_PASSWORD,
+    database: MYSQL_DB,
 })
 
 db.connect((error, res) => {
