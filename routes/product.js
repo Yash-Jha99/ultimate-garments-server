@@ -7,7 +7,7 @@ var uuid = require('uuid').v4
 
 
 router.get('/', (req, res) => {
-    const query = !req.user ? "select *,null as wishlistId from products" : `select P.*,W.id as wishlistId from products P left join wishlist W on P.id=w.product_id and W.user_id="${req.user.id}"`
+    const query = !req.user ? "select *,null as wishlistId from products" : `select P.*,W.id as wishlistId from products P left join wishlist W on P.id=W.product_id and W.user_id="${req.user.id}"`
     db.query(query, (error, result) => {
         if (error) {
             return res.status(500).json({ result: error })
