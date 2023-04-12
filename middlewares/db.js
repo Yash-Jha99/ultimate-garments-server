@@ -1,4 +1,15 @@
-// var mysql = require('mysql')
+var mysql = require('mysql')
+require("dotenv").config()
+
+var db = mysql.createConnection({
+    host: process.env.MYSQL_HOST,
+    port: process.env.MYSQL_PORT,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DB,
+})
+
+
 // var db = mysql.createConnection({
 //     host: "localhost",
 //     port: 3306,
@@ -7,10 +18,10 @@
 //     database: "ultimate_garments",
 // })
 
-// db.connect((error, res) => {
-//     if (error) console.log("MySQL:", error)
-//     else console.log("Connected to MySQL Database")
-// })
+db.connect((error, res) => {
+    if (error) console.log("MySQL Error:", error)
+    else console.log("Connected to MySQL Database")
+})
 
 // var { Pool } = require('pg')
 // const db = new Pool({
@@ -22,12 +33,9 @@
 //     connectionTimeoutMillis: 5000
 // })
 
-
-
-db.connect((err) => {
-    if (err) console.log(err)
-    console.log("Connected to PostgreSQL")
-
-})
+// db.connect((err) => {
+//     if (err) console.log(err)
+//     console.log("Connected to PostgreSQL")
+// })
 
 module.exports = db
