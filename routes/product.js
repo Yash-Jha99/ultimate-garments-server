@@ -74,12 +74,12 @@ router.get('/category/:name', (req, res) => {
         color = typeof color === "string" ? [color] : color ?? []
         const filter = [...size, ...color].map(f => `'${f}'`).join(',')
         console.log(filter)
-        query += `left join product_options po on po.product_id=p.id join options o on po.option_id=o.id and o.name in (${filter}) `
+        query += `left join product_options po on po.product_id=p.id join options o on po.size_option_id=o.id or po.color_option_id=o.id  and o.name in (${filter}) `
     }
     if (req.user) {
-        query += `left join wishlist W on P.id = w.product_id and W.user_id = "${req?.user?.id}"`
+        query += `left join wishlist W on P.id = W.product_id and W.user_id = "${req?.user?.id}"`
     }
-    console.log(query)
+
 
 
 
@@ -120,9 +120,10 @@ router.get('/options/:option', (req, res) => {
 
 router.get('/:id/:option', (req, res) => {
     const { option, id } = req.params
-    db.query(`select * from options where id in (select ${option}_option_id from product_options where product_id =?)`, [id], (error, result) => {
+    db.query(`select o.*,po.id as productOptionId from product_options po join options o on po.${option}_option_id=o.id and po.product_id=? `, [id], (error, result) => {
         if (error) console.log(error)
-        else return res.status(200).send(result)
+        else res.status(200).send(result)
+
     })
 })
 

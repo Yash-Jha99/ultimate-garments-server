@@ -26,11 +26,8 @@ router.post("/", (req, res) => {
 router.get("/", (req, res) => {
     const { id: userId } = req.user
 
-    db.query("select W.id,P.id as productId, P.name,P.price,P.discount,P.image from products P,wishlist W where P.id=W.product_id and W.user_id=? ", [userId], (err, result) => {
-        if (err) {
-            console.log(err)
-            res.status(500).json({ result: false })
-        }
+    db.query("select W.id,P.id as productId, P.name,P.price,P.discount,P.image  from products P  join wishlist W on P.id=W.product_id and W.user_id=? ", [userId], (err, result) => {
+        if (err) next(err)
         else res.status(200).send(result)
     })
 })
