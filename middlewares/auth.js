@@ -21,6 +21,7 @@ const user = (req, res, next) => {
         try {
             req.user = verifyAuthToken(token)
         } catch (error) {
+            console.log(error)
         }
     return next()
 }

@@ -4,14 +4,14 @@ const db = require("../middlewares/db")
 var uuid = require('uuid').v4
 
 router.post("/", (req, res) => {
-    const { productId, quantity, sizeId, colorId } = req.body
+    const { productId, quantity, productOptionId } = req.body
     const { id: userId } = req.user
     const id = uuid()
 
-    db.query("insert into cart values (?,?,?,?,?,?) ", [id, productId, userId, quantity, sizeId, colorId], (err, result) => {
+    db.query("insert into cart values (?,?,?,?,?) ", [id, productId, userId, quantity, productOptionId], (err, result) => {
         if (err) console.log(err)
         else
-            db.query("select P.id as productId, P.name,P.price,P.discount,P.image,C.quantity,P.id,C.id,(select name from options where id=C.color_id) as color,(select name from options where id=C.size_id) as size from products P,Cart C where P.id=C.product_id and C.id=? ", [id], (err, result) => {
+            db.query("select P.id as productId, P.name,P.price,P.discount,P.image,C.quantity,C.product_option_id,C.id from products P join cart C on C.product_id=P.id and C.id=? join product_options PO on PO.id=C.product_option_id join options O on O.id=PO.size_option_id or O.id=PO.color_option_id ", [id], (err, result) => {
                 if (err) console.log(err)
                 else res.status(201).send(result[0])
             })
@@ -19,9 +19,7 @@ router.post("/", (req, res) => {
 })
 router.get("/", (req, res) => {
     const { id: userId } = req.user
-
-
-    db.query("select P.id as productId, P.name,P.price,P.discount,P.image,C.quantity,P.id,C.id,(select name from options where id=C.color_id) as color,(select upper(name) from options where id=C.size_id) as size from products P,Cart C where P.id=C.product_id and C.user_id=? ", [userId], (err, result) => {
+    db.query("select  P.id as productId, P.name,P.price,P.discount,P.image,C.quantity,C.product_option_id,C.id,(select upper(name) from options where size_option_id = id) as size,(select name from options where color_option_id = id) as color from products P join cart C on C.product_id=P.id and C.user_id=? join product_options PO on PO.id=C.product_option_id ", [userId], (err, result) => {
         if (err) {
             console.log(err)
         }

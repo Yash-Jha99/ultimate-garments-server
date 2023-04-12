@@ -5,6 +5,7 @@ var upload = require('../middlewares/multer');
 const { admin } = require('../middlewares/auth');
 var uuid = require('uuid').v4
 
+
 router.get('/', (req, res) => {
     const query = !req.user ? "select *,null as wishlistId from products" : `select P.*,W.id as wishlistId from products P left join wishlist W on P.id=w.product_id and W.user_id="${req.user.id}"`
     db.query(query, (error, result) => {
@@ -35,20 +36,25 @@ router.get('/:name', (req, res) => {
     db.query('select * from products where name=?', [req.params.name], (error, result) => {
         if (error) console.log(error)
         else product = { ...result[0], ...product }
-        db.query('select id,upper(name) as name from options where id in (select option_id from product_options where product_id=? and name="size")', [product.id], (error, result) => {
+        db.query('select id,upper(name) as name,price_inc from options where id in (select size_option_id from product_options where product_id=?)', [product.id], (error, result) => {
             if (error) console.log(error)
             else product.sizes = result
-            db.query('select id,name as label,value from options where id in (select option_id from product_options where product_id=? and name="color")', [product.id], (error, result) => {
-                if (error) console.log(error)
-                else product.colors = result
-                if (req.user)
-                    db.query('select id from wishlist where product_id=? and user_id=?', [product.id, req.user.id], (error, result) => {
-                        if (error) console.log(error)
-                        else if (result[0]) product.wishlistId = result[0].id
-                        return res.status(200).send(product)
-                    })
-                else return res.status(200).send(product)
+            db.query('select id as productOptionId, color_option_id as colorId,size_option_id as sizeId from product_options where product_id=(select id from products where name=?)', [req.params.name], (err, result) => {
+                if (err) next(err)
+                else product.options = result
+                db.query('select id,name as label,value,price_inc from options where id in (select color_option_id from product_options where product_id=?)', [product.id], (error, result) => {
+                    if (error) console.log(error)
+                    else product.colors = result
+                    if (req.user)
+                        db.query('select id from wishlist where product_id=? and user_id=?', [product.id, req.user.id], (error, result) => {
+                            if (error) console.log(error)
+                            else if (result[0]) product.wishlistId = result[0].id
+                            return res.status(200).send(product)
+                        })
+                    else return res.status(200).send(product)
+                })
             })
+
         })
     })
 
@@ -102,7 +108,7 @@ router.get('/subcategory/:categoryid', (req, res) => {
 
 
 router.get('/options/:option', (req, res) => {
-    db.query(`select * from options where id in (select option_id from product_options where name=?)`, [req.params.option], (error, result) => {
+    db.query(`select id,name,value,price_inc from options where type=? `, [req.params.option], (error, result) => {
         if (error) {
             return res.status(500).json({ result: error })
         }
@@ -114,7 +120,7 @@ router.get('/options/:option', (req, res) => {
 
 router.get('/:id/:option', (req, res) => {
     const { option, id } = req.params
-    db.query(`select * from options where id in (select option_id from product_options where product_id =? and name =?)`, [id, option], (error, result) => {
+    db.query(`select * from options where id in (select ${option}_option_id from product_options where product_id =?)`, [id], (error, result) => {
         if (error) console.log(error)
         else return res.status(200).send(result)
     })

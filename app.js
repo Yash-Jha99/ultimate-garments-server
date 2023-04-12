@@ -13,8 +13,11 @@ const imageRouter = require("./routes/image")
 const productRouter = require("./routes/product")
 const wishlistRouter = require("./routes/wishlist")
 const adminRouter = require("./routes/admin");
+const paymentRouter = require("./routes/payment")
+const orderRouter = require("./routes/order")
 const cors = require('cors')
 const { admin, auth, access, user } = require('./middlewares/auth');
+require("dotenv").config()
 
 var app = express();
 
@@ -29,17 +32,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(access)
+// app.use(access)
 app.use(user)
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
 app.use('/product', productRouter);
-app.use('/image', imageRouter);
+app.use('/img', imageRouter);
 
 app.use(auth)
+app.use('/wishlist', wishlistRouter);
 app.use('/address', addressRouter);
 app.use('/cart', cartRouter);
-app.use('/wishlist', wishlistRouter);
+app.use("/order", orderRouter)
+app.use("/payment", paymentRouter)
 
 
 app.use(admin)
@@ -57,6 +62,7 @@ app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
+  console.log("{ERROR}", err)
   // render the error page
   res.status(err.status || 500).send(err);
 });
