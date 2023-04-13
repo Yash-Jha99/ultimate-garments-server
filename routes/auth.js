@@ -43,7 +43,7 @@ router.post("/validate", (req, res) => {
     db.query('select id,name,email,mobile_number,isAdmin from users where mobile_number=?', [req.body.mobileNumber], (err, result) => {
         if (err) console.log(err)
         if (result[0]) {
-            const token = jwt.sign({ ...result[0] }, "jwtPrivateKey")
+            const token = generateAuthToken(result[0])
             return res.status(200).send(token)
         }
         else return res.status(200).send(null)
