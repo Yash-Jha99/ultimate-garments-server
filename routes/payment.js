@@ -5,7 +5,7 @@ require("dotenv").config()
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 router.post("/create-checkout-session", (req, res, next) => {
-    const { cartsId } = req.body
+    const { cartsId, orderId } = req.body
     const ids = cartsId.map(id => `'${id}'`).join(",")
     const query = `select p.name,p.price,c.quantity from cart c join products p on c.product_id=p.id where c.id in (${ids})`
     db.query(query, async (err, result) => {

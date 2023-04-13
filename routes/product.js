@@ -30,24 +30,25 @@ router.get('/category', (req, res) => {
     })
 })
 
-router.get('/:name', (req, res) => {
+router.get('/:name', (req, res, next) => {
     let product = { wishlistId: null }
 
     db.query('select * from products where name=?', [req.params.name], (error, result) => {
-        if (error) console.log(error)
+        if (error) next(error)
+        else if (!result[0]) return res.status(404).send("Product Not Found")
         else product = { ...result[0], ...product }
         db.query('select id,upper(name) as name,price_inc from options where id in (select size_option_id from product_options where product_id=?)', [product.id], (error, result) => {
-            if (error) console.log(error)
+            if (error) next(error)
             else product.sizes = result
             db.query('select id as productOptionId, color_option_id as colorId,size_option_id as sizeId from product_options where product_id=(select id from products where name=?)', [req.params.name], (err, result) => {
                 if (err) next(err)
                 else product.options = result
                 db.query('select id,name as label,value,price_inc from options where id in (select color_option_id from product_options where product_id=?)', [product.id], (error, result) => {
-                    if (error) console.log(error)
+                    if (error) next(error)
                     else product.colors = result
                     if (req.user)
                         db.query('select id from wishlist where product_id=? and user_id=?', [product.id, req.user.id], (error, result) => {
-                            if (error) console.log(error)
+                            if (error) next(error)
                             else if (result[0]) product.wishlistId = result[0].id
                             return res.status(200).send(product)
                         })
@@ -67,7 +68,7 @@ router.get('/:name', (req, res) => {
 router.get('/category/:name', (req, res) => {
     let { size, color } = req.query
 
-    let query = `select distinct p.id ,p.name,p.price,p.discount,p.image,${req.user ? "W.id" : null} as wishlistId from products p join category c on c.id=p.category_id and c.name="${req.params.name}" `
+    let query = `select distinct p.id ,p.name,p.price,p.discount,p.image,${req.user ? "w.id" : null} as wishlistId from products p join category c on c.id=p.category_id and c.name="${req.params.name}" `
     let sizeFilter, colorFilter
     if (size || color) {
         size = typeof size === "string" ? [size] : size ?? []
@@ -84,7 +85,7 @@ router.get('/category/:name', (req, res) => {
         query += ` join options o2 on po.color_option_id=o2.id and o2.name in (${colorFilter})`
 
     if (req.user) {
-        query += ` left join wishlist W on P.id = W.product_id and W.user_id = "${req?.user?.id}"`
+        query += ` left join wishlist w on p.id = w.product_id and w.user_id = "${req?.user?.id}"`
     }
 
 
