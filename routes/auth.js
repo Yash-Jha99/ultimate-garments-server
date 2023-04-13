@@ -41,10 +41,11 @@ router.post("/validate", (req, res) => {
 
     if (otp !== req.body.otp) return res.status(400).send("Invalid Otp")
 
-    db.query('select id,name,email,mobile_number,isAdmin from users where mobile_number=?', [req.body.mobileNumber], (err, result) => {
+    db.query('select id,name,email,mobile_number as mobileNumber,isAdmin from users where mobile_number=?', [req.body.mobileNumber], (err, result) => {
         if (err) console.log(err)
         if (result[0]) {
-            const token = generateAuthToken(result[0])
+            const { id, mobileNumber, email, name,isAdmin }=result[0]
+            const token = generateAuthToken({ id, mobileNumber, email, name ,isAdmin})
             return res.status(200).send(token)
         }
         else return res.status(200).send(null)
