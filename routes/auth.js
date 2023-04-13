@@ -3,6 +3,7 @@ const Joi = require("joi")
 const router = express.Router()
 const jwt = require("jsonwebtoken")
 const db = require("../middlewares/db")
+const {generateAuthToken}=require("../middlewares/tokens")
 
 const validateReq = (req) => {
     const schema = Joi.object({
