@@ -26,14 +26,22 @@ router.post("/create-checkout-session", (req, res, next) => {
                         quantity: product.quantity,
                     })),
                     mode: "payment",
-                    success_url: process.env.PAYMENT_SUCCESS_URL,
-                    cancel_url: process.env.PAYMENT_CANCEL_URL,
+                    success_url: process.env.PAYMENT_SUCCESS_URL + "?success=true",
+                    cancel_url: process.env.PAYMENT_CANCEL_URL + "?success=false",
                 });
                 res.status(200).json({ url: session.url })
             } catch (error) {
                 next(error)
             }
         }
+    })
+})
+
+router.put("/status/:id", (req, res, next) => {
+    const { status } = req.body
+    db.query("update payments set status=? where id=?", [status, req.params.id], (err, res) => {
+        if (err) return next(err)
+        else res.status(200).json({ id: req.params.id })
     })
 })
 

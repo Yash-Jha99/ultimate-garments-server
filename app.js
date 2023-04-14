@@ -63,9 +63,12 @@ app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  console.log("{ERROR}", err)
-  // render the error page
-  res.status(err.status || 500).send(err);
+  if (err.status) res.status(err.status).send(err);
+  else {
+    console.log("{ERROR}", err)
+    res.status(500).json({ message: "Internal Server Error" })
+  }
+
 });
 
 module.exports = app;
