@@ -17,13 +17,16 @@ router.post("/", (req, res, next) => {
     }).join(',')
 
     db.query(query, (err, result) => {
-        if (err) next(err)
+        if (err) return next(err)
         else
             db.query("insert into payments values (?,?,?,current_timestamp(),'PENDING') ", [paymentId, paymentType, amount], (err, result) => {
-                if (err) next(err)
+                if (err) return next(err)
                 else db.query("insert into orders values (?,?,?,?,current_timestamp()) ", [orderId, userId, paymentId, addressId], (err, result) => {
-                    if (err) next(err)
-                    else res.status(201).send({ id: orderId })
+                    if (err) return next(err)
+                    else db.query("select id from order_items where order_id=?", [orderId], (err, result) => {
+                        if (err) return next(err)
+                        else res.status(201).send(result)
+                    })
                 })
             })
     })
