@@ -1,34 +1,19 @@
-var mysql = require('mysql')
-require("dotenv").config()
+var mysql = require("mysql");
+require("dotenv").config();
 
-var db = mysql.createConnection({
-    host: process.env.MYSQL_HOST,
-    port: process.env.MYSQL_PORT,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DB,
-})
+var db = mysql.createConnection(process.env.MYSQL_URI);
 
-db.connect((error, res) => {
-    if (error) console.log("MySQL Error:", error)
-    else console.log("Connected to MySQL Database")
-})
+db.connect((error) => {
+  if (error) console.log("MySQL Error:", error);
+  else console.log("Connected to MySQL Database");
+});
 
-// var { Pool } = require('pg')
-// const db = new Pool({
-//     database: "bcdaiwggs3j602lzbeod",
-//     host: "bcdaiwggs3j602lzbeod-postgresql.services.clever-cloud.com",
-//     password: "Vd9RWw64n9IQZ1ZU494fdLftMorhaN",
-//     port: 5432,
-//     user: "ug10elfqnispappodhxy",
-//     connectionTimeoutMillis: 5000
-// })
+// var { Client } = require("pg");
+// const db = new Client(process.env.POSTGRESQL_URI);
 
 // db.connect((err) => {
-//     if (err) console.log(err)
-//     console.log("Connected to PostgreSQL")
-// })
+//   if (err) console.log(err);
+//   else console.log("Connected to PostgreSQL");
+// });
 
-
-
-module.exports = db
+module.exports = db;

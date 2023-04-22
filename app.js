@@ -4,6 +4,7 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 const logger = require("morgan");
 
+const indexRouter = require("./routes/index");
 const userRouter = require("./routes/user");
 const authRouter = require("./routes/auth");
 const addressRouter = require("./routes/address");
@@ -16,6 +17,7 @@ const paymentRouter = require("./routes/payment");
 const orderRouter = require("./routes/order");
 const cors = require("cors");
 const { admin, auth, access, user } = require("./middlewares/auth");
+const db = require("./middlewares/db");
 require("dotenv").config();
 
 var app = express();
@@ -31,8 +33,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+app.use("/", indexRouter);
 app.use("/img", imageRouter);
-// app.use(access);
+app.use(access);
 app.use(user);
 app.use("/user", userRouter);
 app.use("/auth", authRouter);
