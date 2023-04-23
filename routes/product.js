@@ -2,19 +2,6 @@ var express = require("express");
 var router = express.Router();
 var db = require("../middlewares/db");
 
-router.get("/", (req, res) => {
-  const query = !req.user
-    ? "select *,null as wishlistId from products"
-    : `select P.*,W.id as wishlistId from products P left join wishlist W on P.id=W.product_id and W.user_id="${req.user.id}"`;
-  db.query(query, (error, result) => {
-    if (error) {
-      return res.status(500).json({ result: error });
-    } else {
-      return res.status(200).send(result);
-    }
-  });
-});
-
 router.get("/category", (req, res) => {
   db.query("select * from category", (error, result) => {
     if (error) {
@@ -37,13 +24,13 @@ router.get("/:name", (req, res, next) => {
       else if (!result[0]) return res.status(404).send("Product Not Found");
       else product = { ...result[0], ...product };
       db.query(
-        "select id,upper(name) as name,price_inc from options where id in (select size_option_id from product_options where product_id=?)",
+        "select id,upper(name) as name,price_inc from options where id in (select size_option_id from product_options where product_id=?) order by id",
         [product.id],
         (error, result) => {
           if (error) next(error);
           else product.sizes = result;
           db.query(
-            "select id as productOptionId, color_option_id as colorId,size_option_id as sizeId from product_options where product_id=(select id from products where name=?)",
+            "select id as productOptionId, color_option_id as colorId,size_option_id as sizeId,quantity_in_stock as quantityInStock from product_options where product_id=(select id from products where name=?)",
             [req.params.name],
             (err, result) => {
               if (err) next(err);
@@ -75,20 +62,31 @@ router.get("/:name", (req, res, next) => {
   );
 });
 
-router.get("/category/:name", (req, res) => {
-  let { size, color } = req.query;
+router.get("/", (req, res, next) => {
+  const { size, color, search, price, category } = req.query;
+  console.log(req.query);
 
+  let sizeFilter, colorFilter;
   let query = `select distinct p.id ,p.name,p.price,p.discount,p.image,${
     req.user ? "w.id" : null
-  } as wishlistId from products p join category c on c.id=p.category_id and c.name="${
-    req.params.name
-  }" `;
-  let sizeFilter, colorFilter;
+  } as wishlistId from products p `;
+
+  if (category)
+    query += `join category c on c.id=p.category_id and c.name="${category}"`;
+
+  if (search) query += `join category c on c.id=p.category_id`;
+
   if (size || color) {
-    size = typeof size === "string" ? [size] : size ?? [];
-    sizeFilter = size.map((f) => `'${f}'`).join(",");
-    color = typeof color === "string" ? [color] : color ?? [];
-    colorFilter = color.map((f) => `'${f}'`).join(",");
+    sizeFilter = size
+      ?.split("+")
+      .map((f) => `'${f}'`)
+      .join(",");
+
+    colorFilter = color
+      ?.split("+")
+      .map((f) => `'${f}'`)
+      .join(",");
+
     query += `join product_options po on po.product_id=p.id`;
   }
 
@@ -102,13 +100,13 @@ router.get("/category/:name", (req, res) => {
     query += ` left join wishlist w on p.id = w.product_id and w.user_id = "${req?.user?.id}"`;
   }
 
+  if (search) {
+    query += ` where lower(c.name) like "%${search.toLowerCase()}%" or lower(p.name) like "%${search.toLowerCase()}%"`;
+  }
+
   db.query(query, (error, result) => {
-    if (error) {
-      console.log(error);
-      return res.status(500).json({ result: error });
-    } else {
-      return res.status(200).send(result);
-    }
+    if (error) return next(error);
+    else return res.status(200).send(result);
   });
 });
 
