@@ -1,1 +1,0 @@
-# ultimate-garments-server
